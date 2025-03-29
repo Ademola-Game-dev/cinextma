@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import { PropsWithChildren } from "react";
 import { HeroUIProvider, Spinner } from "@heroui/react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -13,11 +13,7 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 const queryClient = new QueryClient();
 
-export interface ProvidersProps {
-  children: React.ReactNode;
-}
-
-export default function Providers({ children }: ProvidersProps) {
+export default function Providers({ children }: PropsWithChildren) {
   const router = useRouter();
 
   return (
