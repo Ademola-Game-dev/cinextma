@@ -9,6 +9,8 @@ import {
   IoInformationCircle,
   IoInformationCircleOutline,
   IoMoon,
+  IoTv,
+  IoTvOutline,
 } from "react-icons/io5";
 import { TbFolder, TbFolderFilled } from "react-icons/tb";
 
@@ -24,10 +26,16 @@ export const siteConfig = {
       activeIcon: <GoHomeFill className="size-full" />,
     },
     {
-      label: "Discover",
+      label: "Movies",
       href: "/discover",
       icon: <IoCompassOutline className="size-full" />,
       activeIcon: <IoCompass className="size-full" />,
+    },
+    {
+      label: "TV Shows",
+      href: "/tv/discover",
+      icon: <IoTvOutline className="size-full" />,
+      activeIcon: <IoTv className="size-full" />,
     },
     {
       label: "Search",

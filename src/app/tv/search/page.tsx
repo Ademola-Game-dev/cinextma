@@ -5,10 +5,10 @@ import { Metadata } from "next/types";
 const SearchList = dynamic(() => import("./SearchList"), { ssr: false });
 
 export const metadata: Metadata = {
-  title: `Search | ${siteConfig.name}`,
+  title: `Search TV Shows | ${siteConfig.name}`,
 };
 
-export default function SearchPage() {
+export default function SearchTVShowsPage() {
   return (
     <>
       <SearchList />

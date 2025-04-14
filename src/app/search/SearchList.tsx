@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { DiscoverPosterCard } from "@/app/discover/DiscoverPosterCard";
+import { DiscoverTVShowCard } from "@/app/tv/discover/DiscoverTVShowCard";
 import { useQuery } from "@tanstack/react-query";
-import { Pagination, Skeleton } from "@heroui/react";
+import { Pagination, Skeleton, Tabs, Tab } from "@heroui/react";
 import { SkeletonDiscoverPosterCard } from "@/app/discover/SkeletonDiscoverPosterCard";
 import { tmdb } from "@/api/tmdb";
 import { useDebouncedValue, useLocalStorage } from "@mantine/hooks";
@@ -26,18 +27,39 @@ export default function SearchList() {
     defaultValue: [],
     getInitialValueInEffect: false,
   });
-  const { data, isPending } = useQuery({
+  const [activeTab, setActiveTab] = useState("movies");
+
+  // Movies search query
+  const { data: moviesData, isPending: isMoviesPending } = useQuery({
     queryFn: () => tmdb.search.movies({ query: debouncedSearchQuery, page: page }),
     queryKey: ["search-movie", page, debouncedSearchQuery],
+    enabled: debouncedSearchQuery.length > 0 && activeTab === "movies",
   });
 
-  const movies = data?.results as Movie[];
+  // TV Shows search query
+  const { data: tvShowsData, isPending: isTVShowsPending } = useQuery({
+    queryFn: () => tmdb.search.tvShows({ query: debouncedSearchQuery, page: page }),
+    queryKey: ["search-tv-show", page, debouncedSearchQuery],
+    enabled: debouncedSearchQuery.length > 0 && activeTab === "tvshows",
+  });
 
-  const totalResults = data?.total_results as number;
+  const movies = moviesData?.results as Movie[];
+  const tvShows = tvShowsData?.results as any[];
+
+  const totalResults =
+    activeTab === "movies"
+      ? (moviesData?.total_results as number)
+      : (tvShowsData?.total_results as number);
+
+  const isPending = activeTab === "movies" ? isMoviesPending : isTVShowsPending;
 
   useEffect(() => {
-    setTotalPages(data?.total_pages ?? totalPages);
-  }, [data?.total_pages]);
+    if (activeTab === "movies") {
+      setTotalPages(moviesData?.total_pages ?? totalPages);
+    } else {
+      setTotalPages(tvShowsData?.total_pages ?? totalPages);
+    }
+  }, [moviesData?.total_pages, tvShowsData?.total_pages, activeTab]);
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
@@ -56,6 +78,11 @@ export default function SearchList() {
     }
   }, [debouncedSearchQuery]);
 
+  const handleTabChange = (key: React.Key) => {
+    setActiveTab(key.toString());
+    setPage(1);
+  };
+
   return (
     <div className="flex flex-col items-center gap-8">
       <AnimatePresence>
@@ -72,7 +99,7 @@ export default function SearchList() {
             transition={{ duration: 0.3 }}
           >
             <SearchInput
-              placeholder="Search your favorite movies..."
+              placeholder="Search movies and TV shows..."
               isLoading={isPending && isSearchTriggered}
               autoFocus
               value={searchQuery}
@@ -89,6 +116,17 @@ export default function SearchList() {
 
       {isSearchTriggered && (
         <>
+          <Tabs
+            aria-label="Content Type"
+            color="primary"
+            variant="underlined"
+            selectedKey={activeTab}
+            onSelectionChange={handleTabChange}
+          >
+            <Tab key="movies" title="Movies" />
+            <Tab key="tvshows" title="TV Shows" />
+          </Tabs>
+
           {totalResults !== 0 && (
             <Pagination
               showControls
@@ -115,25 +153,31 @@ export default function SearchList() {
                   <span className="motion-preset-confetti">
                     Found{" "}
                     <span className="font-bold text-primary">{totalResults.toLocaleString()}</span>{" "}
-                    movies with query{" "}
+                    {activeTab === "movies" ? "movies" : "TV shows"} with query{" "}
                     <span className="font-bold text-warning">"{debouncedSearchQuery}"</span>
                   </span>
                 ) : (
                   <span>
-                    No movie was found with query{" "}
+                    No {activeTab === "movies" ? "movie" : "TV show"} was found with query{" "}
                     <span className="font-bold text-warning">"{debouncedSearchQuery}"</span>
                   </span>
                 )}
               </h5>
-              {movies.length > 0 && (
-                <>
-                  <div className="movie-grid">
-                    {movies.map((movie) => (
-                      <DiscoverPosterCard key={movie.id} movie={movie} />
-                    ))}
-                  </div>
-                </>
-              )}
+              {activeTab === "movies"
+                ? movies?.length > 0 && (
+                    <div className="movie-grid">
+                      {movies.map((movie) => (
+                        <DiscoverPosterCard key={movie.id} movie={movie} />
+                      ))}
+                    </div>
+                  )
+                : tvShows?.length > 0 && (
+                    <div className="movie-grid">
+                      {tvShows.map((tvShow) => (
+                        <DiscoverTVShowCard key={tvShow.id} tvShow={tvShow} />
+                      ))}
+                    </div>
+                  )}
             </>
           )}
           {totalResults !== 0 && (
